@@ -1,0 +1,39 @@
+<% layout('layout', { title: 'Initial Setup' }) %>
+
+<div class="mx-auto max-w-md mt-14">
+  <div class="bg-white rounded-2xl shadow p-6 border">
+    <h1 class="text-xl font-semibold">Create Admin Account</h1>
+    <p class="text-sm text-gray-600 mt-1">
+      First time setup. Create the admin login that will access the dashboard and manage campaigns.
+    </p>
+
+    <div class="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-900">
+      <div class="font-semibold">Recommended</div>
+      <ul class="list-disc ml-5 mt-1 text-xs">
+        <li>Use a strong password (12+ chars)</li>
+        <li>Keep the database file backed up: <span class="font-mono">data/phish.db</span></li>
+      </ul>
+    </div>
+
+    <form class="mt-6 space-y-4" method="POST" action="/setup">
+      <div>
+        <label class="text-sm text-gray-700">Admin username</label>
+        <input name="username" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="admin" value="admin" required />
+      </div>
+      <div>
+        <label class="text-sm text-gray-700">Create password</label>
+        <input name="password" type="password" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="Minimum 8 characters" required />
+      </div>
+      <div>
+        <label class="text-sm text-gray-700">Confirm password</label>
+        <input name="confirm_password" type="password" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="Re-enter password" required />
+      </div>
+
+      <button class="w-full rounded-xl bg-black text-white py-2 hover:bg-gray-900">Create admin</button>
+    </form>
+
+    <p class="text-xs text-gray-500 mt-4">
+      After creation, you’ll be redirected to the login page.
+    </p>
+  </div>
+</div>

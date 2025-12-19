@@ -1,0 +1,162 @@
+<% layout('layout', { title: 'Dashboard' }) %>
+
+<section class="max-w-6xl mx-auto">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold">Org capability dashboard</h1>
+      <p class="text-sm text-gray-500">High-level performance view across all campaigns.</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="/campaigns" class="px-3 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm">Manage campaigns</a>
+      <a href="/admin/settings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50 text-sm">Admin settings</a>
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="p-4 rounded-2xl border bg-white">
+      <div class="text-xs text-gray-500">Total campaigns</div>
+      <div id="kpiCampaigns" class="text-2xl font-semibold mt-1">—</div>
+    </div>
+    <div class="p-4 rounded-2xl border bg-white">
+      <div class="text-xs text-gray-500">Targets</div>
+      <div id="kpiTargets" class="text-2xl font-semibold mt-1">—</div>
+    </div>
+    <div class="p-4 rounded-2xl border bg-white">
+      <div class="text-xs text-gray-500">Click rate</div>
+      <div id="kpiClickRate" class="text-2xl font-semibold mt-1">—</div>
+      <div class="text-xs text-gray-500 mt-1">Clicked ÷ Targets</div>
+    </div>
+    <div class="p-4 rounded-2xl border bg-white">
+      <div class="text-xs text-gray-500">Credential rate</div>
+      <div id="kpiCredRate" class="text-2xl font-semibold mt-1">—</div>
+      <div class="text-xs text-gray-500 mt-1">Credential attempts ÷ Targets</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-1 p-4 rounded-2xl border bg-white">
+      <div class="text-sm font-medium mb-3">Funnel (all campaigns)</div>
+      <canvas id="funnelChart" height="240"></canvas>
+    </div>
+
+    <div class="lg:col-span-2 p-4 rounded-2xl border bg-white">
+      <div class="flex items-center justify-between">
+        <div class="text-sm font-medium">Campaign performance</div>
+        <div class="text-xs text-gray-500">Top 10 by targets</div>
+      </div>
+      <div class="mt-3">
+        <canvas id="campaignChart" height="120"></canvas>
+      </div>
+      <div class="mt-3 text-xs text-gray-500">
+        Bars show rates (%). Use campaigns page to drill down.
+      </div>
+    </div>
+  </div>
+
+  <!-- Table (professional summary) -->
+  <div class="mt-6 p-4 rounded-2xl border bg-white">
+    <div class="flex items-center justify-between">
+      <div class="text-sm font-medium">Summary</div>
+      <a href="/campaigns" class="text-sm text-blue-700 hover:underline">Open campaign manager →</a>
+    </div>
+    <div class="mt-3 overflow-auto">
+      <table class="min-w-full text-sm">
+        <thead class="text-gray-500">
+          <tr>
+            <th class="text-left py-2 pr-4">Campaign</th>
+            <th class="text-right py-2 pr-4">Targets</th>
+            <th class="text-right py-2 pr-4">Clicks</th>
+            <th class="text-right py-2 pr-4">Click rate</th>
+            <th class="text-right py-2 pr-4">Cred attempts</th>
+            <th class="text-right py-2 pr-4">Cred rate</th>
+          </tr>
+        </thead>
+        <tbody id="summaryBody">
+          <tr><td class="py-2 text-gray-500" colspan="6">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<script>
+  (async function () {
+    try {
+      const r = await fetch('/api/stats/overview');
+      const data = await r.json();
+
+      const totals = data.totals || {};
+      const funnel = data.funnel || { targets: 0, clicked: 0, name_submitted: 0, credential_attempt: 0 };
+      const rows = data.byCampaign || [];
+
+      const pct = (n, d) => d > 0 ? (Math.round((n / d) * 1000) / 10) : 0;
+
+      // KPI
+      document.getElementById('kpiCampaigns').textContent = totals.campaigns ?? 0;
+      document.getElementById('kpiTargets').textContent = totals.targets ?? 0;
+      document.getElementById('kpiClickRate').textContent = pct(funnel.clicked, funnel.targets) + '%';
+      document.getElementById('kpiCredRate').textContent = pct(funnel.credential_attempt, funnel.targets) + '%';
+
+      // Funnel chart
+      new Chart(document.getElementById('funnelChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: ['Targets', 'Clicked', 'Name Submitted', 'Credential Attempt'],
+          datasets: [{ label: 'Count', data: [funnel.targets, funnel.clicked, funnel.name_submitted, funnel.credential_attempt] }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { x: { beginAtZero: true } }
+        }
+      });
+
+      // Campaign performance chart (top 10 by targets)
+      const top = [...rows].sort((a,b) => (b.targets||0) - (a.targets||0)).slice(0, 10).reverse();
+      const labels = top.map(x => x.name);
+      const clickRates = top.map(x => x.click_rate || 0);
+      const credRates  = top.map(x => x.credential_rate || 0);
+
+      new Chart(document.getElementById('campaignChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Click rate %', data: clickRates },
+            { label: 'Credential rate %', data: credRates }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: { x: { }, y: { beginAtZero: true, ticks: { callback: v => v + '%' } } }
+        }
+      });
+
+      // Summary table
+      const body = document.getElementById('summaryBody');
+      if (!rows.length) {
+        body.innerHTML = '<tr><td class="py-2 text-gray-500" colspan="6">No campaigns yet.</td></tr>';
+      } else {
+        body.innerHTML = rows.map(c => `
+          <tr class="border-t">
+            <td class="py-2 pr-4">
+              <a class="text-blue-700 hover:underline" href="/campaigns/${c.id}">${c.name}</a>
+            </td>
+            <td class="py-2 pr-4 text-right">${c.targets}</td>
+            <td class="py-2 pr-4 text-right">${c.clicks}</td>
+            <td class="py-2 pr-4 text-right">${c.click_rate}%</td>
+            <td class="py-2 pr-4 text-right">${c.creds}</td>
+            <td class="py-2 pr-4 text-right">${c.credential_rate}%</td>
+          </tr>
+        `).join('');
+      }
+    } catch (e) {
+      console.error(e);
+      document.getElementById('summaryBody').innerHTML =
+        '<tr><td class="py-2 text-red-600" colspan="6">Failed to load stats.</td></tr>';
+    }
+  })();
+</script>

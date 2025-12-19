@@ -1,0 +1,73 @@
+<% layout('layout', { title: 'Campaigns' }) %>
+
+<section class="max-w-6xl mx-auto">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold">Campaign manager</h1>
+      <p class="text-sm text-gray-500">Create, open, export, and delete campaigns.</p>
+    </div>
+    <a href="/" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50 text-sm">← Dashboard</a>
+  </div>
+
+  <!-- Create -->
+  <div class="mt-6 p-4 rounded-2xl border bg-white">
+    <div class="text-sm font-medium">Create a new campaign</div>
+    <form class="mt-3 flex flex-col sm:flex-row gap-2" method="POST" action="/campaigns">
+      <input name="name" class="flex-1 px-3 py-2 rounded-xl border" placeholder="Campaign name (e.g., Q1 Awareness Test)">
+      <button class="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700">Create</button>
+    </form>
+    <div class="text-xs text-gray-500 mt-2">After creation you’ll be redirected to the campaign details page to add targets and copy links.</div>
+  </div>
+
+  <!-- List -->
+  <div class="mt-6">
+    <% if (!campaigns.length) { %>
+      <div class="p-4 rounded-2xl border bg-white text-sm text-gray-700">
+        No campaigns yet. Create one above.
+      </div>
+    <% } else { %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <% campaigns.forEach(c => { %>
+          <div class="p-4 rounded-2xl border bg-white">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="text-lg font-semibold"><a class="text-blue-700 hover:underline" href="/campaigns/<%= c.id %>"><%= c.name %></a></div>
+                <div class="text-xs text-gray-500">Created: <%= (c.created_at || '').slice(0, 10) %> • ID: <%= c.id %></div>
+              </div>
+
+              <div class="flex gap-2">
+                <a class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50 text-sm" href="/export/campaign/<%= c.id %>.csv">Export</a>
+                <form action="/campaigns/<%= c.id %>/delete" method="POST" onsubmit="return confirm('Delete this campaign and all related data?');">
+                  <button class="px-3 py-2 rounded-xl border border-red-300 bg-white hover:bg-red-50 text-red-700 text-sm">Delete</button>
+                </form>
+              </div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div class="p-3 rounded-xl bg-gray-50 border">
+                <div class="text-xs text-gray-500">Targets</div>
+                <div class="text-lg font-semibold"><%= c.targets %></div>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-50 border">
+                <div class="text-xs text-gray-500">Clicks</div>
+                <div class="text-lg font-semibold"><%= c.clicks %></div>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-50 border">
+                <div class="text-xs text-gray-500">Name submits</div>
+                <div class="text-lg font-semibold"><%= c.names %></div>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-50 border">
+                <div class="text-xs text-gray-500">Cred attempts</div>
+                <div class="text-lg font-semibold"><%= c.creds %></div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <a href="/campaigns/<%= c.id %>" class="inline-flex px-4 py-2 rounded-xl bg-gray-900 text-white hover:bg-black text-sm">Open campaign →</a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</section>

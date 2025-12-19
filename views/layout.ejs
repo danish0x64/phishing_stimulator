@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'PhishSim' %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/favicon.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+
+  <% if (typeof hasAdmin !== 'undefined' && !hasAdmin) { %>
+    <header class="border-b bg-white">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+        <a href="/setup" class="font-semibold tracking-tight">PhishSim</a>
+        <a href="/setup" class="text-sm px-3 py-1.5 rounded-xl border bg-white hover:bg-gray-50">Initial Setup</a>
+      </div>
+    </header>
+  <% } else if (typeof adminUser !== 'undefined' && adminUser) { %>
+    <header class="border-b bg-white">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <a href="/" class="font-semibold tracking-tight">PhishSim</a>
+          <nav class="hidden md:flex items-center gap-4 text-sm text-gray-600">
+            <a class="hover:text-gray-900" href="/">Dashboard</a>
+            <a class="hover:text-gray-900" href="/campaigns">Campaigns</a>
+            <a class="hover:text-gray-900" href="/admin/settings">Settings</a>
+          </nav>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-gray-500">Logged in as <span class="font-medium text-gray-700"><%= adminUser.username %></span></span>
+          <form method="POST" action="/admin/logout">
+            <button class="text-sm px-3 py-1.5 rounded-xl border bg-white hover:bg-gray-50">Logout</button>
+          </form>
+        </div>
+      </div>
+    </header>
+  <% } else { %>
+    <header class="border-b bg-white">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+        <a href="/" class="font-semibold tracking-tight">PhishSim</a>
+        <a href="/admin/login" class="text-sm px-3 py-1.5 rounded-xl border bg-white hover:bg-gray-50">Admin Login</a>
+      </div>
+    </header>
+  <% } %>
+
+  <main class="mx-auto max-w-6xl p-4">
+    <% if (flash) { %>
+      <div class="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-sm"><%= flash %></div>
+    <% } %>
+    <%- body %>
+  </main>
+  
+</body>
+</html>

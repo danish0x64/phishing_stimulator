@@ -1,0 +1,72 @@
+<% layout('layout', { title: 'Admin Settings' }) %>
+
+<div class="flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-semibold">Settings</h1>
+    <p class="text-sm text-gray-600">Keep the dashboard private and your demo professional.</p>
+  </div>
+  <a href="/" class="text-sm px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Back</a>
+</div>
+
+<div class="grid md:grid-cols-2 gap-4 mt-4">
+  <div class="bg-white rounded-2xl shadow p-6 border">
+    <h2 class="font-semibold">Change Admin Password</h2>
+    <p class="text-sm text-gray-600 mt-1">Use a strong password. Minimum 8 characters.</p>
+
+    <form class="mt-4 space-y-3" method="POST" action="/admin/settings/password">
+      <div>
+        <label class="text-sm text-gray-700">Current password</label>
+        <input name="current_password" type="password" class="mt-1 w-full border rounded-xl px-3 py-2" required />
+      </div>
+      <div>
+        <label class="text-sm text-gray-700">New password</label>
+        <input name="new_password" type="password" class="mt-1 w-full border rounded-xl px-3 py-2" required />
+      </div>
+      <div>
+        <label class="text-sm text-gray-700">Confirm new password</label>
+        <input name="confirm_password" type="password" class="mt-1 w-full border rounded-xl px-3 py-2" required />
+      </div>
+      <button class="rounded-xl bg-black text-white px-4 py-2 hover:bg-gray-900">Update password</button>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow p-6 border">
+    <h2 class="font-semibold">Link settings</h2>
+    <p class="text-sm text-gray-600 mt-1">Avoid SSL errors in test. Provide a clean HTTPS domain for production demos.</p>
+
+    <form class="mt-4 space-y-3" method="POST" action="/admin/settings/links">
+      <div>
+        <label class="text-sm text-gray-700">Test / Lab host (HTTP)</label>
+        <input name="test_host" type="text" class="mt-1 w-full border rounded-xl px-3 py-2 font-mono text-sm"
+               value="<%= (linkSettings && linkSettings.testHost) ? linkSettings.testHost : 'localhost:3000' %>"
+               placeholder="localhost:3000" />
+        <div class="text-xs text-gray-500 mt-1">Enter host:port (no http/https). Example: localhost:3000 or 10.0.0.15:3000</div>
+      </div>
+
+      <div>
+        <label class="text-sm text-gray-700">Production domain (HTTPS)</label>
+        <input name="prod_domain" type="text" class="mt-1 w-full border rounded-xl px-3 py-2 font-mono text-sm"
+               value="<%= (linkSettings && linkSettings.prodDomain) ? linkSettings.prodDomain : '' %>"
+               placeholder="sim.company.com" />
+        <div class="text-xs text-gray-500 mt-1">Enter domain only (no path). Leave blank to hide HTTPS link.</div>
+      </div>
+
+      <button class="rounded-xl bg-black text-white px-4 py-2 hover:bg-gray-900">Save link settings</button>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow p-6 border">
+    <h2 class="font-semibold">Security notes</h2>
+    <ul class="mt-3 text-sm text-gray-700 list-disc pl-5 space-y-2">
+      <li>Dashboard, campaigns, exports, and analytics APIs are protected by admin login.</li>
+      <li>Never deploy this publicly without HTTPS + a strong SESSION_SECRET.</li>
+      <li>This tool is for security awareness simulations and internal training only.</li>
+    </ul>
+
+    <div class="mt-4 p-3 rounded-xl bg-gray-50 border text-xs text-gray-600">
+      Recommended env vars:
+      <div class="mt-2 font-mono">SESSION_SECRET=&lt;random-long-secret&gt;</div>
+      <div class="font-mono">DEFAULT_ADMIN_PASSWORD=&lt;only used on first run&gt;</div>
+    </div>
+  </div>
+</div>

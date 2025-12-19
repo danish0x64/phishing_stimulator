@@ -1,0 +1,22 @@
+<% layout('layout', { title: 'Admin Login' }) %>
+
+<div class="mx-auto max-w-md mt-14">
+  <div class="bg-white rounded-2xl shadow p-6 border">
+    <h1 class="text-xl font-semibold">Admin Login</h1>
+    <p class="text-sm text-gray-600 mt-1">Access the analytics dashboard and manage campaigns.</p>
+
+    <form class="mt-6 space-y-4" method="POST" action="/admin/login">
+      <div>
+        <label class="text-sm text-gray-700">Username</label>
+        <input name="username" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="admin" required />
+      </div>
+      <div>
+        <label class="text-sm text-gray-700">Password</label>
+        <input name="password" type="password" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="••••••••" required />
+      </div>
+      <button class="w-full rounded-xl bg-black text-white py-2 hover:bg-gray-900">Sign in</button>
+    </form>
+
+    <p class="text-xs text-gray-500 mt-4">If you forgot the password, use Admin Settings (while logged in) to change it.</p>
+  </div>
+</div>

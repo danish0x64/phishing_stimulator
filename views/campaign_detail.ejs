@@ -1,0 +1,273 @@
+<% layout('layout', { title: campaign.name }) %>
+
+<section class="max-w-6xl mx-auto">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold"><%= campaign.name %></h1>
+      <p class="text-sm text-gray-500">Campaign ID: <%= campaign.id %> • Created: <%= (campaign.created_at || '').slice(0, 10) %></p>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      <a href="/campaigns" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50 text-sm">← Campaigns</a>
+
+      <button id="copyLinkBtn" class="px-3 py-2 rounded-xl bg-gray-900 text-white hover:bg-black text-sm">Copy share link</button>
+
+      <a href="/export/campaign/<%= campaign.id %>.csv" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50 text-sm">Export CSV</a>
+
+      <form action="/campaigns/<%= campaign.id %>/delete" method="POST" onsubmit="return confirm('Delete this campaign and all related data? This cannot be undone.');">
+        <button class="px-3 py-2 rounded-xl border border-red-300 bg-white hover:bg-red-50 text-red-700 text-sm">Delete</button>
+      </form>
+    </div>
+  </div>
+
+    <!-- Share link -->
+  <div class="mt-6 p-4 rounded-2xl border bg-white">
+    <div class="flex flex-col gap-3">
+      <div>
+        <div class="text-sm font-medium">Share link (send to targets)</div>
+        <div class="text-xs text-gray-500">
+          Use <b>HTTP</b> for internal testing (avoids SSL warnings). Use <b>HTTPS</b> for production/external sends.
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div class="p-3 rounded-xl border bg-gray-50">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xs font-medium text-gray-700">Test / Lab link (HTTP)</div>
+            <button id="copyHttpBtn" class="px-3 py-1.5 rounded-xl bg-gray-900 text-white hover:bg-black text-xs">Copy</button>
+          </div>
+          <input id="httpShareLink" class="mt-2 w-full px-3 py-2 rounded-xl border font-mono text-sm"
+                 readonly value="<%= httpBase %>/l/<%= shareToken %>">
+          <div class="mt-2 text-xs text-gray-500">
+            Recommended for localhost / internal IPs to avoid browser certificate errors.
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl border bg-gray-50">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xs font-medium text-gray-700">Production link (HTTPS)</div>
+            <button id="copyHttpsBtn" class="px-3 py-1.5 rounded-xl bg-gray-900 text-white hover:bg-black text-xs"
+                    <%= httpsBase ? '' : 'disabled' %>>
+              Copy
+            </button>
+          </div>
+
+          <input id="httpsShareLink" class="mt-2 w-full px-3 py-2 rounded-xl border font-mono text-sm"
+                 readonly value="<%= httpsBase ? (httpsBase + '/l/' + shareToken) : '' %>"
+                 placeholder="Set PROD_DOMAIN environment variable to show the HTTPS link">
+          <div class="mt-2 text-xs text-gray-500">
+            <% if (httpsBase) { %>
+              Recommended for production (custom domain + valid TLS certificate).
+            <% } else { %>
+              Not configured. Set <code>PROD_DOMAIN</code> (e.g., <code>sim.company.com</code>) in production.
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-xs text-gray-500">
+        Note: Ideally send <b>unique target links</b> from the Targets table below. The links above use the latest target token (or a placeholder if no targets exist).
+      </div>
+    </div>
+  </div>
+
+<!-- KPIs + Professional charts -->
+  <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-1 p-4 rounded-2xl border bg-white">
+      <div class="text-sm font-medium mb-3">Funnel (targets)</div>
+      <canvas id="funnelChart" height="220"></canvas>
+      <div class="mt-3 text-xs text-gray-500">
+        Shows progress through the funnel based on the target record fields (clicked/name/credential attempt).
+      </div>
+    </div>
+
+    <div class="lg:col-span-2 p-4 rounded-2xl border bg-white">
+      <div class="flex items-center justify-between">
+        <div class="text-sm font-medium">Recent activity (audit trail)</div>
+        <div class="text-xs text-gray-500">Latest 30 events</div>
+      </div>
+      <div class="mt-3 overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="text-gray-500">
+            <tr>
+              <th class="text-left py-2 pr-4">Time</th>
+              <th class="text-left py-2 pr-4">Event</th>
+              <th class="text-left py-2 pr-4">Target</th>
+            </tr>
+          </thead>
+          <tbody id="recentEventsBody">
+            <tr><td class="py-2 text-gray-500" colspan="3">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Targets -->
+  <div id="targets" class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-1 p-4 rounded-2xl border bg-white">
+      <h2 class="text-sm font-semibold">Add targets</h2>
+      <p class="text-xs text-gray-500 mt-1">Paste emails (one per line). Names are optional.</p>
+
+      <form class="mt-4 space-y-3" method="POST" action="/campaigns/<%= campaign.id %>/targets">
+        <div>
+          <label class="text-xs text-gray-600">Emails</label>
+          <textarea name="emails" rows="7" class="mt-1 w-full px-3 py-2 rounded-xl border" placeholder="user1@company.com&#10;user2@company.com"></textarea>
+        </div>
+
+        <details class="rounded-xl border bg-gray-50 p-3">
+          <summary class="cursor-pointer text-xs text-gray-700 font-medium">Add a single target (optional)</summary>
+          <div class="mt-3 space-y-2">
+            <input name="name" class="w-full px-3 py-2 rounded-xl border" placeholder="Full name (optional)">
+            <input name="email" class="w-full px-3 py-2 rounded-xl border" placeholder="Email (optional)">
+          </div>
+        </details>
+
+        <button class="w-full px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700">Add</button>
+      </form>
+    </div>
+
+    <div class="lg:col-span-2 p-4 rounded-2xl border bg-white">
+      <div class="flex items-center justify-between gap-2">
+        <h2 class="text-sm font-semibold">Targets</h2>
+        <div class="text-xs text-gray-500"><%= targets.length %> total</div>
+      </div>
+
+      <% if (!targets.length) { %>
+        <div class="mt-4 p-4 rounded-xl bg-gray-50 border text-sm text-gray-700">
+          No targets yet. Add emails on the left. Then you can copy each person’s unique link from the table below.
+        </div>
+      <% } else { %>
+        <div class="mt-4 overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="text-gray-500">
+              <tr>
+                <th class="text-left py-2 pr-4">Email</th>
+                <th class="text-left py-2 pr-4">Status</th>
+                <th class="text-left py-2 pr-4">Unique link</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% targets.forEach(t => { %>
+                <tr class="border-t">
+                  <td class="py-2 pr-4">
+                    <div class="font-medium"><%= t.email || '(no email)' %></div>
+                    <div class="text-xs text-gray-500"><%= t.name || '' %></div>
+                  </td>
+                  <td class="py-2 pr-4">
+                    <% if (t.credential_attempt_at) { %>
+                      <span class="inline-flex px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs">Credential attempt</span>
+                    <% } else if (t.name_submitted_at) { %>
+                      <span class="inline-flex px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs">Name submitted</span>
+                    <% } else if (t.clicked_at) { %>
+                      <span class="inline-flex px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs">Clicked</span>
+                    <% } else { %>
+                      <span class="inline-flex px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">Not engaged</span>
+                    <% } %>
+                  </td>
+                  <td class="py-2 pr-4">
+                    <div class="flex items-center gap-2">
+                      <input class="w-full px-2 py-1 rounded-lg border font-mono text-xs" readonly value="<%= (httpsBase ? httpsBase : httpBase) %>/l/<%= t.token %>">
+                      <button type="button" class="px-2 py-1 rounded-lg border bg-white hover:bg-gray-50 text-xs"
+                              onclick="navigator.clipboard.writeText('<%= httpBase %>/l/<%= t.token %>')">Copy</button>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Copy share link button - if no targets exist, it still copies the base instructions link
+  (function () {
+    const btn = document.getElementById('copyLinkBtn');
+    const httpInput = document.getElementById('httpShareLink');
+    const httpsInput = document.getElementById('httpsShareLink');
+    const copyHttpBtn = document.getElementById('copyHttpBtn');
+    const copyHttpsBtn = document.getElementById('copyHttpsBtn');
+
+    function preferredLink() {
+      const httpsVal = (httpsInput && httpsInput.value) ? httpsInput.value.trim() : '';
+      if (httpsVal) return httpsVal;
+      return (httpInput && httpInput.value) ? httpInput.value.trim() : '';
+    }
+
+    async function copyText(text, buttonEl, originalLabel) {
+      try {
+        await navigator.clipboard.writeText(text);
+        if (buttonEl) {
+          buttonEl.textContent = 'Copied';
+          setTimeout(() => (buttonEl.textContent = originalLabel), 1200);
+        }
+      } catch (_) {
+        alert('Copy failed. Select the link and copy manually.');
+      }
+    }
+
+    if (btn) {
+      btn.addEventListener('click', () => copyText(preferredLink(), btn, 'Copy share link'));
+    }
+    if (copyHttpBtn && httpInput) {
+      copyHttpBtn.addEventListener('click', () => copyText(httpInput.value, copyHttpBtn, 'Copy'));
+    }
+    if (copyHttpsBtn && httpsInput) {
+      copyHttpsBtn.addEventListener('click', () => {
+        if (!httpsInput.value) return;
+        copyText(httpsInput.value, copyHttpsBtn, 'Copy');
+      });
+    }
+  })();
+
+  // Professional charts: funnel only + audit table
+  (async function () {
+    try {
+      const r = await fetch('/api/stats/campaign/<%= campaign.id %>');
+      const data = await r.json();
+
+      // Funnel chart
+      const f = data.funnel || { targets: 0, clicked: 0, name_submitted: 0, credential_attempt: 0 };
+      const ctx = document.getElementById('funnelChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Targets', 'Clicked', 'Name Submitted', 'Credential Attempt'],
+          datasets: [{
+            label: 'Count',
+            data: [f.targets, f.clicked, f.name_submitted, f.credential_attempt]
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { x: { beginAtZero: true } }
+        }
+      });
+
+      // Recent activity table
+      const body = document.getElementById('recentEventsBody');
+      const rows = (data.recent || []);
+      if (!rows.length) {
+        body.innerHTML = '<tr><td class="py-2 text-gray-500" colspan="3">No activity yet.</td></tr>';
+      } else {
+        body.innerHTML = rows.map(e => {
+          const who = (e.email || e.name || '(unknown)').toString();
+          const when = (e.created_at || '').toString().replace('T', ' ').slice(0, 19);
+          const type = (e.event_type || '').toString().replaceAll('_', ' ');
+          return `<tr class="border-t">
+            <td class="py-2 pr-4 text-xs text-gray-600">${when}</td>
+            <td class="py-2 pr-4">${type}</td>
+            <td class="py-2 pr-4">${who}</td>
+          </tr>`;
+        }).join('');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  })();
+</script>

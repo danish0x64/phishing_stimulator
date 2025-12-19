@@ -1,0 +1,18 @@
+<% layout('layout', { title: 'Continue' }) %>
+
+<section class="mx-auto max-w-xl">
+  <div class="bg-white rounded-2xl shadow p-6 text-center">
+    <h1 class="text-xl font-semibold mb-2">Security check</h1>
+    <p class="text-sm text-gray-600 mb-6">
+      Please continue to proceed.
+    </p>
+
+    <% if (typeof token !== 'undefined' && token) { %>
+      <a class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+         href="/l/<%= token %>">Continue</a>
+    <% } else { %>
+      <a class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+         href="/">Go to dashboard</a>
+    <% } %>
+  </div>
+</section>
