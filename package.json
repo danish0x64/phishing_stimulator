@@ -1,0 +1,22 @@
+{
+  "name": "phish-sim-local",
+  "version": "1.0.0",
+  "description": "Local phishing simulation server with tracking and reports (training use only).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.0",
+    "body-parser": "^1.20.2",
+    "csv-stringify": "^6.4.6",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.1",
+    "nanoid": "^5.0.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
