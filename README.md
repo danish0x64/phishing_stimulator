@@ -36,7 +36,7 @@ set SESSION_SECRET=...some-long-random-string...
 - Create campaigns and add target users.
 - Generates unique tracking links per target.
 - Tracks **link opens**, **name submissions**, and **credential attempts** (stores only username and a **non-recoverable hash** + length).
-- Beautiful landing page themed as “HealthAssure Free Amazon Voucher” (editable).
+- Beautiful landing page themed as “Your Organisation Free Amazon Voucher” (editable).
 - Admin dashboard with metrics and CSV export.
 - Fully local SQLite database (`data/phish.db`).
 
